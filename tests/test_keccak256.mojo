@@ -35,6 +35,32 @@ fn check_bytes(label: String, data: List[Int], length: Int, expected_hex: String
 fn run_known_vectors() raises:
     check_string("empty", "", "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470")
     check_string("abc", "abc", "4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45")
+    check_string(
+        "quickfox/no_period",
+        "The quick brown fox jumps over the lazy dog",
+        "4d741b6f1eb29cb2a9b9911c82f56fa8d73b04959d3d9d222895df6c0b28aa15",
+    )
+    check_string(
+        "quickfox/period",
+        "The quick brown fox jumps over the lazy dog.",
+        "578951e24efd62a3d63a86f7cd19aaa53c898fe287d2552133220370240b572d",
+    )
+    var sequential = [0] * 256
+    for i in range(len(sequential)):
+        sequential[i] = i
+    check_bytes(
+        "byte_range",
+        sequential,
+        len(sequential),
+        "dc924469b334aed2a19fac7252e9961aea41f8d91996366029dbe0884229bf36",
+    )
+    var zeros512 = [0] * 512
+    check_bytes(
+        "zeros/512",
+        zeros512,
+        len(zeros512),
+        "d5c44f659751a819616c58c9efe38e80f2b84cf621036da99c019bbe4f1fb647",
+    )
 
 
 fn run_incremental_vectors() raises:
