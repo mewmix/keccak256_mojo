@@ -4,7 +4,8 @@ name = "mojo-keccak256"
 platforms = ["osx-arm64"]
 version = "0.1.0"
 
-[tasks]
+[tasks.test]
+cmd = "mojo -I . tests/test_keccak256.mojo"
 
 [dependencies]
 mojo = ">=0.25.7.0.dev2025101905,<0.26"
