@@ -8,3 +8,6 @@ version = "0.1.0"
 
 [dependencies]
 mojo = ">=0.25.7.0.dev2025101905,<0.26"
+python = ">=3.11,<3.13"
+pycryptodome = "*"
+pytest = "*"
