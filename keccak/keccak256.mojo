@@ -59,56 +59,165 @@ fn load_lane_ptr(ptr: UnsafePointer[UInt8]) -> UInt64:
     return v
 
 fn keccak_f1600(mut s: List[UInt64]) -> None:
-    var C = [UInt64(0)] * 5
-    var D = [UInt64(0)] * 5
-    var B = [UInt64(0)] * 25
     var RC = round_constants()
 
-    for round in range(ROUNDS):
-        @parameter
-        if USE_UNROLLED_THETA_CHI:
-            C[0] = s[0] ^ s[5] ^ s[10] ^ s[15] ^ s[20]
-            C[1] = s[1] ^ s[6] ^ s[11] ^ s[16] ^ s[21]
-            C[2] = s[2] ^ s[7] ^ s[12] ^ s[17] ^ s[22]
-            C[3] = s[3] ^ s[8] ^ s[13] ^ s[18] ^ s[23]
-            C[4] = s[4] ^ s[9] ^ s[14] ^ s[19] ^ s[24]
+    @parameter
+    if USE_UNROLLED_THETA_CHI:
+        var Aba = s[0]
+        var Abe = s[1]
+        var Abi = s[2]
+        var Abo = s[3]
+        var Abu = s[4]
+        var Aga = s[5]
+        var Age = s[6]
+        var Agi = s[7]
+        var Ago = s[8]
+        var Agu = s[9]
+        var Aka = s[10]
+        var Ake = s[11]
+        var Aki = s[12]
+        var Ako = s[13]
+        var Aku = s[14]
+        var Ama = s[15]
+        var Ame = s[16]
+        var Ami = s[17]
+        var Amo = s[18]
+        var Amu = s[19]
+        var Asa = s[20]
+        var Ase = s[21]
+        var Asi = s[22]
+        var Aso = s[23]
+        var Asu = s[24]
 
-            D[0] = C[4] ^ rotl64(C[1], 1)
-            D[1] = C[0] ^ rotl64(C[2], 1)
-            D[2] = C[1] ^ rotl64(C[3], 1)
-            D[3] = C[2] ^ rotl64(C[4], 1)
-            D[4] = C[3] ^ rotl64(C[0], 1)
+        for round in range(ROUNDS):
+            var C0 = Aba ^ Aga ^ Aka ^ Ama ^ Asa
+            var C1 = Abe ^ Age ^ Ake ^ Ame ^ Ase
+            var C2 = Abi ^ Agi ^ Aki ^ Ami ^ Asi
+            var C3 = Abo ^ Ago ^ Ako ^ Amo ^ Aso
+            var C4 = Abu ^ Agu ^ Aku ^ Amu ^ Asu
 
-            s[0] = s[0] ^ D[0]
-            s[5] = s[5] ^ D[0]
-            s[10] = s[10] ^ D[0]
-            s[15] = s[15] ^ D[0]
-            s[20] = s[20] ^ D[0]
+            var D0 = C4 ^ rotl64(C1, 1)
+            var D1 = C0 ^ rotl64(C2, 1)
+            var D2 = C1 ^ rotl64(C3, 1)
+            var D3 = C2 ^ rotl64(C4, 1)
+            var D4 = C3 ^ rotl64(C0, 1)
 
-            s[1] = s[1] ^ D[1]
-            s[6] = s[6] ^ D[1]
-            s[11] = s[11] ^ D[1]
-            s[16] = s[16] ^ D[1]
-            s[21] = s[21] ^ D[1]
+            Aba = Aba ^ D0
+            Abe = Abe ^ D1
+            Abi = Abi ^ D2
+            Abo = Abo ^ D3
+            Abu = Abu ^ D4
+            Aga = Aga ^ D0
+            Age = Age ^ D1
+            Agi = Agi ^ D2
+            Ago = Ago ^ D3
+            Agu = Agu ^ D4
+            Aka = Aka ^ D0
+            Ake = Ake ^ D1
+            Aki = Aki ^ D2
+            Ako = Ako ^ D3
+            Aku = Aku ^ D4
+            Ama = Ama ^ D0
+            Ame = Ame ^ D1
+            Ami = Ami ^ D2
+            Amo = Amo ^ D3
+            Amu = Amu ^ D4
+            Asa = Asa ^ D0
+            Ase = Ase ^ D1
+            Asi = Asi ^ D2
+            Aso = Aso ^ D3
+            Asu = Asu ^ D4
 
-            s[2] = s[2] ^ D[2]
-            s[7] = s[7] ^ D[2]
-            s[12] = s[12] ^ D[2]
-            s[17] = s[17] ^ D[2]
-            s[22] = s[22] ^ D[2]
+            var B0 = Aba
+            var B1 = rotl64(Age, 44)
+            var B2 = rotl64(Aki, 43)
+            var B3 = rotl64(Amo, 21)
+            var B4 = rotl64(Asu, 14)
+            var B5 = rotl64(Abo, 28)
+            var B6 = rotl64(Agu, 20)
+            var B7 = rotl64(Aka, 3)
+            var B8 = rotl64(Ame, 45)
+            var B9 = rotl64(Asi, 61)
+            var B10 = rotl64(Abe, 1)
+            var B11 = rotl64(Agi, 6)
+            var B12 = rotl64(Ako, 25)
+            var B13 = rotl64(Amu, 8)
+            var B14 = rotl64(Asa, 18)
+            var B15 = rotl64(Abu, 27)
+            var B16 = rotl64(Aga, 36)
+            var B17 = rotl64(Ake, 10)
+            var B18 = rotl64(Ami, 15)
+            var B19 = rotl64(Aso, 56)
+            var B20 = rotl64(Abi, 62)
+            var B21 = rotl64(Ago, 55)
+            var B22 = rotl64(Aku, 39)
+            var B23 = rotl64(Ama, 41)
+            var B24 = rotl64(Ase, 2)
 
-            s[3] = s[3] ^ D[3]
-            s[8] = s[8] ^ D[3]
-            s[13] = s[13] ^ D[3]
-            s[18] = s[18] ^ D[3]
-            s[23] = s[23] ^ D[3]
+            Aba = B0 ^ ((~B1) & B2)
+            Abe = B1 ^ ((~B2) & B3)
+            Abi = B2 ^ ((~B3) & B4)
+            Abo = B3 ^ ((~B4) & B0)
+            Abu = B4 ^ ((~B0) & B1)
 
-            s[4] = s[4] ^ D[4]
-            s[9] = s[9] ^ D[4]
-            s[14] = s[14] ^ D[4]
-            s[19] = s[19] ^ D[4]
-            s[24] = s[24] ^ D[4]
-        else:
+            Aga = B5 ^ ((~B6) & B7)
+            Age = B6 ^ ((~B7) & B8)
+            Agi = B7 ^ ((~B8) & B9)
+            Ago = B8 ^ ((~B9) & B5)
+            Agu = B9 ^ ((~B5) & B6)
+
+            Aka = B10 ^ ((~B11) & B12)
+            Ake = B11 ^ ((~B12) & B13)
+            Aki = B12 ^ ((~B13) & B14)
+            Ako = B13 ^ ((~B14) & B10)
+            Aku = B14 ^ ((~B10) & B11)
+
+            Ama = B15 ^ ((~B16) & B17)
+            Ame = B16 ^ ((~B17) & B18)
+            Ami = B17 ^ ((~B18) & B19)
+            Amo = B18 ^ ((~B19) & B15)
+            Amu = B19 ^ ((~B15) & B16)
+
+            Asa = B20 ^ ((~B21) & B22)
+            Ase = B21 ^ ((~B22) & B23)
+            Asi = B22 ^ ((~B23) & B24)
+            Aso = B23 ^ ((~B24) & B20)
+            Asu = B24 ^ ((~B20) & B21)
+
+            Aba = Aba ^ RC[round]
+
+        s[0] = Aba
+        s[1] = Abe
+        s[2] = Abi
+        s[3] = Abo
+        s[4] = Abu
+        s[5] = Aga
+        s[6] = Age
+        s[7] = Agi
+        s[8] = Ago
+        s[9] = Agu
+        s[10] = Aka
+        s[11] = Ake
+        s[12] = Aki
+        s[13] = Ako
+        s[14] = Aku
+        s[15] = Ama
+        s[16] = Ame
+        s[17] = Ami
+        s[18] = Amo
+        s[19] = Amu
+        s[20] = Asa
+        s[21] = Ase
+        s[22] = Asi
+        s[23] = Aso
+        s[24] = Asu
+    else:
+        var RHO = rho_offsets()
+        var C = [UInt64(0)] * 5
+        var D = [UInt64(0)] * 5
+        var B = [UInt64(0)] * 25
+
+        for round in range(ROUNDS):
             for x in range(5):
                 C[x] = s[x] ^ s[x + 5] ^ s[x + 10] ^ s[x + 15] ^ s[x + 20]
             for x in range(5):
@@ -116,98 +225,12 @@ fn keccak_f1600(mut s: List[UInt64]) -> None:
             for i in range(25):
                 s[i] = s[i] ^ D[i % 5]
 
-        @parameter
-        if USE_UNROLLED_THETA_CHI:
-            B[0] = rotl64(s[0], 0)
-            B[10] = rotl64(s[1], 1)
-            B[20] = rotl64(s[2], 62)
-            B[5] = rotl64(s[3], 28)
-            B[15] = rotl64(s[4], 27)
-            B[16] = rotl64(s[5], 36)
-            B[1] = rotl64(s[6], 44)
-            B[11] = rotl64(s[7], 6)
-            B[21] = rotl64(s[8], 55)
-            B[6] = rotl64(s[9], 20)
-            B[7] = rotl64(s[10], 3)
-            B[17] = rotl64(s[11], 10)
-            B[2] = rotl64(s[12], 43)
-            B[12] = rotl64(s[13], 25)
-            B[22] = rotl64(s[14], 39)
-            B[23] = rotl64(s[15], 41)
-            B[8] = rotl64(s[16], 45)
-            B[18] = rotl64(s[17], 15)
-            B[3] = rotl64(s[18], 21)
-            B[13] = rotl64(s[19], 8)
-            B[14] = rotl64(s[20], 18)
-            B[24] = rotl64(s[21], 2)
-            B[9] = rotl64(s[22], 61)
-            B[19] = rotl64(s[23], 56)
-            B[4] = rotl64(s[24], 14)
-        else:
-            var RHO = rho_offsets()
             for x in range(5):
                 for y in range(5):
                     var idx = x + 5 * y
                     var new_idx = y + 5 * ((2 * x + 3 * y) % 5)
                     B[new_idx] = rotl64(s[idx], RHO[x][y])
 
-        @parameter
-        if USE_UNROLLED_THETA_CHI:
-            var b00 = B[0]
-            var b01 = B[1]
-            var b02 = B[2]
-            var b03 = B[3]
-            var b04 = B[4]
-            s[0] = b00 ^ ((~b01) & b02)
-            s[1] = b01 ^ ((~b02) & b03)
-            s[2] = b02 ^ ((~b03) & b04)
-            s[3] = b03 ^ ((~b04) & b00)
-            s[4] = b04 ^ ((~b00) & b01)
-
-            var b10 = B[5]
-            var b11 = B[6]
-            var b12 = B[7]
-            var b13 = B[8]
-            var b14 = B[9]
-            s[5] = b10 ^ ((~b11) & b12)
-            s[6] = b11 ^ ((~b12) & b13)
-            s[7] = b12 ^ ((~b13) & b14)
-            s[8] = b13 ^ ((~b14) & b10)
-            s[9] = b14 ^ ((~b10) & b11)
-
-            var b20 = B[10]
-            var b21 = B[11]
-            var b22 = B[12]
-            var b23 = B[13]
-            var b24 = B[14]
-            s[10] = b20 ^ ((~b21) & b22)
-            s[11] = b21 ^ ((~b22) & b23)
-            s[12] = b22 ^ ((~b23) & b24)
-            s[13] = b23 ^ ((~b24) & b20)
-            s[14] = b24 ^ ((~b20) & b21)
-
-            var b30 = B[15]
-            var b31 = B[16]
-            var b32 = B[17]
-            var b33 = B[18]
-            var b34 = B[19]
-            s[15] = b30 ^ ((~b31) & b32)
-            s[16] = b31 ^ ((~b32) & b33)
-            s[17] = b32 ^ ((~b33) & b34)
-            s[18] = b33 ^ ((~b34) & b30)
-            s[19] = b34 ^ ((~b30) & b31)
-
-            var b40 = B[20]
-            var b41 = B[21]
-            var b42 = B[22]
-            var b43 = B[23]
-            var b44 = B[24]
-            s[20] = b40 ^ ((~b41) & b42)
-            s[21] = b41 ^ ((~b42) & b43)
-            s[22] = b42 ^ ((~b43) & b44)
-            s[23] = b43 ^ ((~b44) & b40)
-            s[24] = b44 ^ ((~b40) & b41)
-        else:
             for y in range(0, 25, 5):
                 var b0 = B[y + 0]
                 var b1 = B[y + 1]
@@ -220,7 +243,7 @@ fn keccak_f1600(mut s: List[UInt64]) -> None:
                 s[y + 3] = b3 ^ ((~b4) & b0)
                 s[y + 4] = b4 ^ ((~b0) & b1)
 
-        s[0] = s[0] ^ RC[round]
+            s[0] = s[0] ^ RC[round]
 
 fn keccak256_bytes(data: List[Int], length: Int) -> List[Int]:
     var state = [UInt64(0)] * 25
