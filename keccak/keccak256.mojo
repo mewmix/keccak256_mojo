@@ -44,16 +44,7 @@ fn rotl64(x: UInt64, n: Int) -> UInt64:
     var inv = UInt64(64 - n)
     return (x << shift) | (x >> inv)
 
-fn load_lane_ptr(ptr: UnsafePointer[UInt8]) -> UInt64:
-    var v = UInt64(ptr[0])
-    v |= UInt64(ptr[1]) << 8
-    v |= UInt64(ptr[2]) << 16
-    v |= UInt64(ptr[3]) << 24
-    v |= UInt64(ptr[4]) << 32
-    v |= UInt64(ptr[5]) << 40
-    v |= UInt64(ptr[6]) << 48
-    v |= UInt64(ptr[7]) << 56
-    return v
+
 
 fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
 
@@ -252,40 +243,9 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
         cursor = UnsafePointer(to=stub[0])
 
     while processed + RATE <= length:
-        var lane_ptr = cursor
-        state[0] = state[0] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[1] = state[1] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[2] = state[2] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[3] = state[3] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[4] = state[4] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[5] = state[5] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[6] = state[6] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[7] = state[7] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[8] = state[8] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[9] = state[9] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[10] = state[10] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[11] = state[11] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[12] = state[12] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[13] = state[13] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[14] = state[14] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[15] = state[15] ^ load_lane_ptr(lane_ptr)
-        lane_ptr = lane_ptr.offset(8)
-        state[16] = state[16] ^ load_lane_ptr(lane_ptr)
+        var u64_ptr = cursor.bitcast[UInt64]()
+        for i in range(LANES):
+            state[i] = state[i] ^ u64_ptr.load(i)
 
         keccak_f1600(state)
         cursor = cursor.offset(RATE)
@@ -298,41 +258,9 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
     block[rem] = UInt8(0x01)
     block[RATE - 1] = block[RATE - 1] ^ UInt8(0x80)
 
-    var tail_ptr = UnsafePointer(to=block[0])
-    var lane_ptr = tail_ptr
-    state[0] = state[0] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[1] = state[1] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[2] = state[2] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[3] = state[3] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[4] = state[4] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[5] = state[5] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[6] = state[6] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[7] = state[7] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[8] = state[8] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[9] = state[9] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[10] = state[10] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[11] = state[11] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[12] = state[12] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[13] = state[13] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[14] = state[14] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[15] = state[15] ^ load_lane_ptr(lane_ptr)
-    lane_ptr = lane_ptr.offset(8)
-    state[16] = state[16] ^ load_lane_ptr(lane_ptr)
+    var u64_ptr = UnsafePointer(to=block[0]).bitcast[UInt64]()
+    for i in range(LANES):
+        state[i] = state[i] ^ u64_ptr.load(i)
 
     keccak_f1600(state)
 
