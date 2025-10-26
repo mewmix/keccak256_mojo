@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -17,8 +18,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install pixi
         shell: bash
@@ -36,11 +36,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pixi-
 
-      - name: Install project env (locked)
+      - name: Configure & install (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
-          pixi info
-          pixi install --locked
+          pixi project platform add linux-64
+          pixi install
+      - name: Install (macOS)
+        if: runner.os == 'macOS'
+        run: pixi install --locked
 
       - name: Mojo version
         run: pixi run mojo --version
