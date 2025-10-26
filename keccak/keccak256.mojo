@@ -1,32 +1,32 @@
+from collections.inline_array import InlineArray
+
 alias RATE = 136
 alias LANES = 17  # RATE / 8
 alias ROUNDS = 24
 alias USE_UNROLLED_THETA_CHI = True
 
-fn round_constants() -> List[UInt64]:
-    return [
-        UInt64(0x0000000000000001), UInt64(0x0000000000008082),
-        UInt64(0x800000000000808A), UInt64(0x8000000080008000),
-        UInt64(0x000000000000808B), UInt64(0x0000000080000001),
-        UInt64(0x8000000080008081), UInt64(0x8000000000008009),
-        UInt64(0x000000000000008A), UInt64(0x0000000000000088),
-        UInt64(0x0000000080008009), UInt64(0x000000008000000A),
-        UInt64(0x000000008000808B), UInt64(0x800000000000008B),
-        UInt64(0x8000000000008089), UInt64(0x8000000000008003),
-        UInt64(0x8000000000008002), UInt64(0x8000000000000080),
-        UInt64(0x000000000000800A), UInt64(0x800000008000000A),
-        UInt64(0x8000000080008081), UInt64(0x8000000000008080),
-        UInt64(0x0000000080000001), UInt64(0x8000000080008008),
-    ]
+alias RC = InlineArray[UInt64, 24](
+    UInt64(0x0000000000000001), UInt64(0x0000000000008082),
+    UInt64(0x800000000000808A), UInt64(0x8000000080008000),
+    UInt64(0x000000000000808B), UInt64(0x0000000080000001),
+    UInt64(0x8000000080008081), UInt64(0x8000000000008009),
+    UInt64(0x000000000000008A), UInt64(0x0000000000000088),
+    UInt64(0x0000000080008009), UInt64(0x000000008000000A),
+    UInt64(0x000000008000808B), UInt64(0x800000000000008B),
+    UInt64(0x8000000000008089), UInt64(0x8000000000008003),
+    UInt64(0x8000000000008002), UInt64(0x8000000000000080),
+    UInt64(0x000000000000800A), UInt64(0x800000008000000A),
+    UInt64(0x8000000080008081), UInt64(0x8000000000008080),
+    UInt64(0x0000000080000001), UInt64(0x8000000080008008),
+)
 
-fn rho_offsets() -> List[List[Int]]:
-    return [
-        [0, 36, 3, 41, 18],
-        [1, 44, 10, 45, 2],
-        [62, 6, 43, 15, 61],
-        [28, 55, 25, 21, 56],
-        [27, 20, 39, 8, 14],
-    ]
+alias RHO = InlineArray[InlineArray[Int, 5], 5](
+    InlineArray[Int, 5](0, 36, 3, 41, 18),
+    InlineArray[Int, 5](1, 44, 10, 45, 2),
+    InlineArray[Int, 5](62, 6, 43, 15, 61),
+    InlineArray[Int, 5](28, 55, 25, 21, 56),
+    InlineArray[Int, 5](27, 20, 39, 8, 14),
+)
 
 fn to_hex32(d: List[Int]) -> String:
     var lut = "0123456789abcdef"
@@ -56,7 +56,6 @@ fn load_lane_ptr(ptr: UnsafePointer[UInt8]) -> UInt64:
     return v
 
 fn keccak_f1600(mut s: List[UInt64]) -> None:
-    var RC = round_constants()
 
     @parameter
     if USE_UNROLLED_THETA_CHI:
@@ -209,7 +208,6 @@ fn keccak_f1600(mut s: List[UInt64]) -> None:
         s[23] = Aso
         s[24] = Asu
     else:
-        var RHO = rho_offsets()
         var C = [UInt64(0)] * 5
         var D = [UInt64(0)] * 5
         var B = [UInt64(0)] * 25
