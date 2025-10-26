@@ -1,0 +1,11 @@
+[package]
+name = "keccak256_rust_baseline"
+version = "0.1.0"
+edition = "2021"
+authors = ["Keccak256 Mojo Contributors"]
+description = "Minimal Rust baseline for the Mojo Keccak-256 implementation"
+license = "MIT"
+
+[dependencies]
+tiny-keccak = { version = "2", default-features = false, features = ["keccak"] }
+hex = "0.4"

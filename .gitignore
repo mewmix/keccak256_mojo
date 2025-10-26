@@ -2,3 +2,8 @@
 .pixi/*
 !.pixi/config.toml
 .modular/
+
+# Native benchmark artifacts
+benchmarks/rust/target/
+benchmarks/c/test_keccak256
+benchmarks/c/test_keccak256.exe

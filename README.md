@@ -36,6 +36,23 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
   `keccak256_bytes`, `keccak256_string`, and `keccak256_hex_string` helpers for
   byte buffers or UTF-8 strings respectively.
 
+### Native baseline smoke tests
+
+Lightweight C and Rust programs are included to validate the third-party
+implementations used for benchmarking.
+
+```bash
+# Rust baseline
+(cd benchmarks/rust && cargo test)
+
+# C baseline
+cc -std=c11 -O2 benchmarks/c/keccak256.c benchmarks/c/test_keccak256.c -o benchmarks/c/test_keccak256
+benchmarks/c/test_keccak256
+```
+
+Compiled artifacts live alongside the sources—see `.gitignore` for the list of
+ignored binaries so they do not end up in commits.
+
 ## Benchmarks
 
 Microbenchmarks comparing this implementation with [`eth-hash`](https://github.com/ethereum/eth-hash)
