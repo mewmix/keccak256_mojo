@@ -39,6 +39,7 @@ fn to_hex32(d: List[Int]) -> String:
         out += lut[b & 0xF]
     return out
 
+@always_inline
 fn rotl64(x: UInt64, n: Int) -> UInt64:
     if n == 0:
         return x
@@ -237,12 +238,12 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
 fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
     var state = InlineArray[UInt64, 25](fill=0)
     var processed = 0
-    var stub = [UInt8(0)] * 1
+    var zero_stub = InlineArray[UInt8, 1](fill=UInt8(0))
     var cursor: UnsafePointer[UInt8]
     if length > 0:
         cursor = ptr
     else:
-        cursor = UnsafePointer(to=stub[0])
+        cursor = UnsafePointer(to=zero_stub[0])
 
     while processed + RATE <= length:
         var u64_ptr = cursor.bitcast[UInt64]()
@@ -253,7 +254,7 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
         cursor = cursor.offset(RATE)
         processed += RATE
 
-    var block = [UInt8(0)] * RATE
+    var block = InlineArray[UInt8, RATE](fill=UInt8(0))
     var rem = length - processed
     for i in range(rem):
         block[i] = (cursor + i)[]
@@ -267,9 +268,9 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
     keccak_f1600(state)
 
     var out = [0] * 32
+    var state_bytes = UnsafePointer(to=state[0]).bitcast[UInt8]()
     for i in range(32):
-        var lane_val = state[i // 8]
-        out[i] = Int((lane_val >> UInt64((i % 8) * 8)) & UInt64(0xFF))
+        out[i] = Int(state_bytes.offset(i)[])
     return out.copy()
 
 
