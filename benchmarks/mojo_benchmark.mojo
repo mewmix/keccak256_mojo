@@ -22,14 +22,13 @@ fn generate_message(index: Int) -> List[Int]:
     return data.copy()
 
 
-fn warm_up(rounds: Int = 3) -> Int:
-    var checksum = 0
+fn warm_up(rounds: Int = 3):
     for _ in range(rounds):
         for idx in range(NUM_MESSAGES):
             var message = generate_message(idx)
             var digest = keccak256_bytes(message, len(message))
-            checksum ^= digest[0]
-    return checksum
+            _ = digest[0]  # warm-up only
+    return
 
 
 struct BenchmarkResult:
@@ -42,7 +41,8 @@ struct BenchmarkResult:
 
 
 fn run_benchmark() -> BenchmarkResult:
-    var checksum = warm_up()
+    warm_up()
+    var checksum = 0
     var start = time.perf_counter()
     for _ in range(ROUNDS):
         for idx in range(NUM_MESSAGES):
