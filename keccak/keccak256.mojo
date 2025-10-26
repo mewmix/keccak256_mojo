@@ -129,3 +129,5 @@ fn keccak256_string(input: String) -> List[Int]:
         idx += 1
     return keccak256_bytes(data, len(data))
 
+fn keccak256_hex_string(input: String) -> String:
+    return to_hex32(keccak256_string(input))

@@ -35,6 +35,23 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
   `keccak256_bytes` and `keccak256_string` helpers for byte buffers or UTF-8
   strings respectively.
 
+## Benchmarks
+
+Microbenchmarks comparing this implementation with [`eth-hash`](https://github.com/ethereum/eth-hash)
+and [`pycryptodome`](https://pycryptodome.readthedocs.io/en/latest/) are available under
+`benchmarks/`.
+
+```bash
+# Activate the Pixi environment first
+pixi run python benchmarks/run_benchmarks.py
+
+# Emit JSON or skip specific implementations if desired
+pixi run python benchmarks/run_benchmarks.py --json --skip-jit
+```
+
+By default the script runs both the Mojo JIT invocation and a compiled binary produced via
+`mojo build`. Compiled artifacts are stored in `.bench-build/`.
+
 ## Usage
  
 Example [main.mojo](https://github.com/mewmix/keccak256_mojo/blob/main/main.mojo):

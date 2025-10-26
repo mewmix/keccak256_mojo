@@ -1,7 +1,5 @@
-from keccak.keccak256 import keccak256_string, to_hex32
+from keccak.keccak256 import keccak256_hex_string
 
 
 def main():
-    var d = keccak256_string("abc")
-    print(to_hex32(d))
-
+    print(keccak256_hex_string("abc"))
