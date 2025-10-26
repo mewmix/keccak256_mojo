@@ -3,6 +3,7 @@ alias LANES = 17  # RATE / 8
 alias ROUNDS = 24
 alias USE_UINT8_CORE = False
 alias USE_POINTER_ABSORB = False
+alias USE_UNROLLED_THETA_CHI = False
 
 fn round_constants() -> List[UInt64]:
     return [
@@ -64,12 +65,56 @@ fn keccak_f1600(mut s: List[UInt64]) -> None:
     var RHO = rho_offsets()
 
     for round in range(ROUNDS):
-        for x in range(5):
-            C[x] = s[x] ^ s[x + 5] ^ s[x + 10] ^ s[x + 15] ^ s[x + 20]
-        for x in range(5):
-            D[x] = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1)
-        for i in range(25):
-            s[i] = s[i] ^ D[i % 5]
+        @parameter
+        if USE_UNROLLED_THETA_CHI:
+            C[0] = s[0] ^ s[5] ^ s[10] ^ s[15] ^ s[20]
+            C[1] = s[1] ^ s[6] ^ s[11] ^ s[16] ^ s[21]
+            C[2] = s[2] ^ s[7] ^ s[12] ^ s[17] ^ s[22]
+            C[3] = s[3] ^ s[8] ^ s[13] ^ s[18] ^ s[23]
+            C[4] = s[4] ^ s[9] ^ s[14] ^ s[19] ^ s[24]
+
+            D[0] = C[4] ^ rotl64(C[1], 1)
+            D[1] = C[0] ^ rotl64(C[2], 1)
+            D[2] = C[1] ^ rotl64(C[3], 1)
+            D[3] = C[2] ^ rotl64(C[4], 1)
+            D[4] = C[3] ^ rotl64(C[0], 1)
+
+            s[0] = s[0] ^ D[0]
+            s[5] = s[5] ^ D[0]
+            s[10] = s[10] ^ D[0]
+            s[15] = s[15] ^ D[0]
+            s[20] = s[20] ^ D[0]
+
+            s[1] = s[1] ^ D[1]
+            s[6] = s[6] ^ D[1]
+            s[11] = s[11] ^ D[1]
+            s[16] = s[16] ^ D[1]
+            s[21] = s[21] ^ D[1]
+
+            s[2] = s[2] ^ D[2]
+            s[7] = s[7] ^ D[2]
+            s[12] = s[12] ^ D[2]
+            s[17] = s[17] ^ D[2]
+            s[22] = s[22] ^ D[2]
+
+            s[3] = s[3] ^ D[3]
+            s[8] = s[8] ^ D[3]
+            s[13] = s[13] ^ D[3]
+            s[18] = s[18] ^ D[3]
+            s[23] = s[23] ^ D[3]
+
+            s[4] = s[4] ^ D[4]
+            s[9] = s[9] ^ D[4]
+            s[14] = s[14] ^ D[4]
+            s[19] = s[19] ^ D[4]
+            s[24] = s[24] ^ D[4]
+        else:
+            for x in range(5):
+                C[x] = s[x] ^ s[x + 5] ^ s[x + 10] ^ s[x + 15] ^ s[x + 20]
+            for x in range(5):
+                D[x] = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1)
+            for i in range(25):
+                s[i] = s[i] ^ D[i % 5]
 
         for x in range(5):
             for y in range(5):
@@ -77,17 +122,74 @@ fn keccak_f1600(mut s: List[UInt64]) -> None:
                 var new_idx = y + 5 * ((2 * x + 3 * y) % 5)
                 B[new_idx] = rotl64(s[idx], RHO[x][y])
 
-        for y in range(0, 25, 5):
-            var b0 = B[y + 0]
-            var b1 = B[y + 1]
-            var b2 = B[y + 2]
-            var b3 = B[y + 3]
-            var b4 = B[y + 4]
-            s[y + 0] = b0 ^ ((~b1) & b2)
-            s[y + 1] = b1 ^ ((~b2) & b3)
-            s[y + 2] = b2 ^ ((~b3) & b4)
-            s[y + 3] = b3 ^ ((~b4) & b0)
-            s[y + 4] = b4 ^ ((~b0) & b1)
+        @parameter
+        if USE_UNROLLED_THETA_CHI:
+            var b00 = B[0]
+            var b01 = B[1]
+            var b02 = B[2]
+            var b03 = B[3]
+            var b04 = B[4]
+            s[0] = b00 ^ ((~b01) & b02)
+            s[1] = b01 ^ ((~b02) & b03)
+            s[2] = b02 ^ ((~b03) & b04)
+            s[3] = b03 ^ ((~b04) & b00)
+            s[4] = b04 ^ ((~b00) & b01)
+
+            var b10 = B[5]
+            var b11 = B[6]
+            var b12 = B[7]
+            var b13 = B[8]
+            var b14 = B[9]
+            s[5] = b10 ^ ((~b11) & b12)
+            s[6] = b11 ^ ((~b12) & b13)
+            s[7] = b12 ^ ((~b13) & b14)
+            s[8] = b13 ^ ((~b14) & b10)
+            s[9] = b14 ^ ((~b10) & b11)
+
+            var b20 = B[10]
+            var b21 = B[11]
+            var b22 = B[12]
+            var b23 = B[13]
+            var b24 = B[14]
+            s[10] = b20 ^ ((~b21) & b22)
+            s[11] = b21 ^ ((~b22) & b23)
+            s[12] = b22 ^ ((~b23) & b24)
+            s[13] = b23 ^ ((~b24) & b20)
+            s[14] = b24 ^ ((~b20) & b21)
+
+            var b30 = B[15]
+            var b31 = B[16]
+            var b32 = B[17]
+            var b33 = B[18]
+            var b34 = B[19]
+            s[15] = b30 ^ ((~b31) & b32)
+            s[16] = b31 ^ ((~b32) & b33)
+            s[17] = b32 ^ ((~b33) & b34)
+            s[18] = b33 ^ ((~b34) & b30)
+            s[19] = b34 ^ ((~b30) & b31)
+
+            var b40 = B[20]
+            var b41 = B[21]
+            var b42 = B[22]
+            var b43 = B[23]
+            var b44 = B[24]
+            s[20] = b40 ^ ((~b41) & b42)
+            s[21] = b41 ^ ((~b42) & b43)
+            s[22] = b42 ^ ((~b43) & b44)
+            s[23] = b43 ^ ((~b44) & b40)
+            s[24] = b44 ^ ((~b40) & b41)
+        else:
+            for y in range(0, 25, 5):
+                var b0 = B[y + 0]
+                var b1 = B[y + 1]
+                var b2 = B[y + 2]
+                var b3 = B[y + 3]
+                var b4 = B[y + 4]
+                s[y + 0] = b0 ^ ((~b1) & b2)
+                s[y + 1] = b1 ^ ((~b2) & b3)
+                s[y + 2] = b2 ^ ((~b3) & b4)
+                s[y + 3] = b3 ^ ((~b4) & b0)
+                s[y + 4] = b4 ^ ((~b0) & b1)
 
         s[0] = s[0] ^ RC[round]
 
