@@ -1,4 +1,5 @@
 # Keccak-256 in Mojo
+[![CI](https://github.com/mewmix/keccak256_mojo/actions/workflows/blank.yml/badge.svg?branch=main)](https://github.com/mewmix/keccak256_mojo/actions/workflows/blank.yml)
 
 A pure Mojo implementation of the Keccak-256 hash along with a self-contained
 test harness and reproducible test vectors.
