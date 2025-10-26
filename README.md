@@ -59,8 +59,7 @@ pixi run bench:mojo-compiled
 ```
 
 Pass `--json` directly to `benchmarks/mojo_benchmark.mojo` if you prefer machine-readable Mojo
-output. Compiled artifacts land in `.bench-build/` when using the compiled task. Benchmarks on
-hosted CI are noisy; measure locally for high-confidence numbers.
+output. Compiled artifacts land in `.bench-build/` when using the compiled task. Benchmarks are super noisy, and we are battling the most legendary and highly optimized C backends so don't expect any remarkable numbers anytime soon.
 
 ## Usage
  
