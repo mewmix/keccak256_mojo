@@ -1,0 +1,14 @@
+[workspace]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+name = "mojo-keccak256"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks.test]
+cmd = "mojo -I . tests/test_keccak256.mojo"
+
+[dependencies]
+mojo = ">=0.25.7.0.dev2025101905,<0.26"
+python = ">=3.11,<3.13"
+pycryptodome = "*"
+pytest = "*"
