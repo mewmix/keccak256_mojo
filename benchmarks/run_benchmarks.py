@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-"""Microbenchmarks comparing Mojo, eth-hash, and PyCryptodome implementations."""
+"""Microbenchmarks comparing Python Keccak implementations."""
 from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import subprocess
 import sys
 import time
-from functools import lru_cache
-from pathlib import Path
 from typing import Callable, Dict, Iterable, List
 
-# Benchmark parameters shared with the Mojo driver. Keep these in sync with the
-# constants defined in ``benchmarks/mojo_benchmark.mojo``.
+# Benchmark parameters shared with the Mojo benchmark. Keep these in sync with
+# the constants defined in ``benchmarks/mojo_benchmark.mojo``.
 NUM_MESSAGES = 512
 ROUNDS = 200
 BASE_LENGTH = 32
@@ -92,75 +88,6 @@ def bench_eth_hash() -> Dict[str, float]:
     return _run_python_bench("eth-hash", _digest)
 
 
-@lru_cache(maxsize=1)
-def _mojo_cmd() -> str:
-    mojo = shutil.which("mojo")
-    if mojo is None:
-        raise SystemExit(
-            "Unable to locate the `mojo` CLI. Activate your Pixi environment or "
-            "install Mojo before benchmarking."
-        )
-    subprocess.run([mojo, "--version"], check=True)
-    return mojo
-
-
-@lru_cache(maxsize=1)
-def _mojo_supports_opt_flag() -> bool:
-    mojo = _mojo_cmd()
-    help_cmd = [mojo, "build", "--help"]
-    proc = subprocess.run(help_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    output = (proc.stdout or "") + (proc.stderr or "")
-    return "--opt" in output
-
-
-def bench_mojo_interpreted(root: Path) -> Dict[str, float]:
-    mojo = _mojo_cmd()
-    target = root / "benchmarks" / "mojo_benchmark.mojo"
-    total_hashes = NUM_MESSAGES * ROUNDS
-    warmup_cmd = [mojo, "-I", str(root), str(target)]
-    subprocess.run(warmup_cmd, check=True)
-    start = time.perf_counter()
-    subprocess.run(warmup_cmd, check=True)
-    elapsed = time.perf_counter() - start
-    return {
-        "implementation": "mojo (jit)",
-        "seconds": elapsed,
-        "hashes_per_second": total_hashes / elapsed,
-        "checksum": None,
-    }
-
-
-def bench_mojo_compiled(root: Path, build_dir: Path) -> Dict[str, float]:
-    mojo = _mojo_cmd()
-    target = root / "benchmarks" / "mojo_benchmark.mojo"
-    build_dir.mkdir(parents=True, exist_ok=True)
-    binary = build_dir / "mojo_keccak_bench"
-
-    compile_cmd = [
-        mojo,
-        "build",
-        "-I",
-        str(root),
-        str(target),
-        "-o",
-        str(binary),
-    ]
-    if _mojo_supports_opt_flag():
-        compile_cmd.append("--opt=3")
-    subprocess.run(compile_cmd, check=True)
-
-    total_hashes = NUM_MESSAGES * ROUNDS
-    start = time.perf_counter()
-    subprocess.run([str(binary)], check=True)
-    elapsed = time.perf_counter() - start
-    return {
-        "implementation": "mojo (compiled)",
-        "seconds": elapsed,
-        "hashes_per_second": total_hashes / elapsed,
-        "checksum": None,
-    }
-
-
 def format_results(results: List[Dict[str, float]]) -> str:
     headers = ("implementation", "seconds", "hashes/s", "checksum")
     lines = [" | ".join(headers)]
@@ -182,21 +109,6 @@ def format_results(results: List[Dict[str, float]]) -> str:
 def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--skip-mojo",
-        action="store_true",
-        help="Skip both Mojo benchmarks.",
-    )
-    parser.add_argument(
-        "--skip-jit",
-        action="store_true",
-        help="Skip the Mojo JIT/interpreted benchmark.",
-    )
-    parser.add_argument(
-        "--skip-compiled",
-        action="store_true",
-        help="Skip the Mojo compiled benchmark.",
-    )
-    parser.add_argument(
         "--skip-eth-hash",
         action="store_true",
         help="Skip the eth-hash baseline.",
@@ -211,27 +123,13 @@ def main(argv: List[str] | None = None) -> int:
         action="store_true",
         help="Emit benchmark results as JSON instead of a table.",
     )
-    parser.add_argument(
-        "--build-dir",
-        default=".bench-build",
-        help="Directory for compiled Mojo artifacts (default: .bench-build).",
-    )
     args = parser.parse_args(argv)
-
-    root = Path(__file__).resolve().parents[1]
     results: List[Dict[str, float]] = []
 
     if not args.skip_eth_hash:
         results.append(bench_eth_hash())
     if not args.skip_pycryptodome:
         results.append(bench_pycryptodome())
-
-    if not args.skip_mojo:
-        if not args.skip_jit:
-            results.append(bench_mojo_interpreted(root))
-        if not args.skip_compiled:
-            build_dir = root / args.build_dir
-            results.append(bench_mojo_compiled(root, build_dir))
 
     if args.json:
         print(json.dumps(results, indent=2))

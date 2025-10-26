@@ -32,36 +32,45 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
   mojo -I . tests/test_keccak256.mojo
   ```
 * The implementation lives in `keccak/keccak256.mojo`; the module exports
-  `keccak256_bytes` and `keccak256_string` helpers for byte buffers or UTF-8
-  strings respectively.
+  `keccak256_bytes`, `keccak256_string`, and `keccak256_hex_string` helpers for
+  byte buffers or UTF-8 strings respectively.
 
 ## Benchmarks
 
 Microbenchmarks comparing this implementation with [`eth-hash`](https://github.com/ethereum/eth-hash)
 and [`pycryptodome`](https://pycryptodome.readthedocs.io/en/latest/) are available under
-`benchmarks/`.
+`benchmarks/`. The default task prints a single table containing both Python baselines and the
+Mojo JIT/compiled timings (the Mojo programs handle their own timing internally).
 
 ```bash
 # Activate the Pixi environment first
-pixi run python benchmarks/run_benchmarks.py
+pixi run bench
 
-# Emit JSON or skip specific implementations if desired
-pixi run python benchmarks/run_benchmarks.py --json --skip-jit
+# JSON output for automation
+pixi run bench:json
+
+# Python-only baselines
+pixi run bench:python
+pixi run bench:python-json
+
+# Mojo-only entries
+pixi run bench:mojo-jit
+pixi run bench:mojo-compiled
 ```
 
-By default the script runs both the Mojo JIT invocation and a compiled binary produced via
-`mojo build`. Compiled artifacts are stored in `.bench-build/`.
+Pass `--json` directly to `benchmarks/mojo_benchmark.mojo` if you prefer machine-readable Mojo
+output. Compiled artifacts land in `.bench-build/` when using the compiled task. Benchmarks on
+hosted CI are noisy; measure locally for high-confidence numbers.
 
 ## Usage
  
 Example [main.mojo](https://github.com/mewmix/keccak256_mojo/blob/main/main.mojo):
 
 ```mojo
-from keccak.keccak256 import keccak256_string, to_hex32
+from keccak.keccak256 import keccak256_hex_string
 
 def main():
-    var d = keccak256_string("abc")
-    print(to_hex32(d))
+    print(keccak256_hex_string("abc"))
 ```
 ## Run within Pixi Shell 
 ```bash

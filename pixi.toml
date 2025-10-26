@@ -8,10 +8,22 @@ version = "0.1.0"
 cmd = "mojo -I . tests/test_keccak256.mojo"
 
 [tasks.bench]
-cmd = "python benchmarks/run_benchmarks.py"
+cmd = "python benchmarks/run_full_benchmarks.py"
 
 [tasks."bench:json"]
+cmd = "python benchmarks/run_full_benchmarks.py --json"
+
+[tasks."bench:python"]
+cmd = "python benchmarks/run_benchmarks.py"
+
+[tasks."bench:python-json"]
 cmd = "python benchmarks/run_benchmarks.py --json"
+
+[tasks."bench:mojo-jit"]
+cmd = "mojo -I . benchmarks/mojo_benchmark.mojo --label \"mojo (jit)\""
+
+[tasks."bench:mojo-compiled"]
+cmd = "bash -lc \"set -euo pipefail; mojo build -I . benchmarks/mojo_benchmark.mojo -o .bench-build/mojo_keccak_bench; .bench-build/mojo_keccak_bench --label 'mojo (compiled)'\""
 
 [dependencies]
 mojo = ">=0.25.7.0.dev2025101905,<0.26"
