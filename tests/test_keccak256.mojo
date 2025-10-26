@@ -1,4 +1,9 @@
-from keccak.keccak256 import keccak256_bytes, keccak256_hex_string, keccak256_string
+from keccak.keccak256 import (
+    keccak256_bytes,
+    keccak256_bytes_from_u8,
+    keccak256_hex_string,
+    keccak256_string,
+)
 from tests._incremental_data import incremental_lengths, incremental_expected
 from tests._fuzz_data import fuzz_lengths, fuzz_expected
 from keccak.local_consts import MASK_64
@@ -30,6 +35,10 @@ fn check_bytes(label: String, data: List[Int], length: Int, expected_hex: String
     var digest = keccak256_bytes(data, length)
     assert_hex(label, digest_to_hex(digest), expected_hex)
 
+fn check_bytes_u8(label: String, data: List[UInt8], length: Int, expected_hex: String) raises:
+    var digest = keccak256_bytes_from_u8(data, length)
+    assert_hex(label, digest_to_hex(digest), expected_hex)
+
 
 fn run_known_vectors() raises:
     check_string("empty", "", "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470")
@@ -53,11 +62,27 @@ fn run_known_vectors() raises:
         len(sequential),
         "dc924469b334aed2a19fac7252e9961aea41f8d91996366029dbe0884229bf36",
     )
+    var sequential_u8 = [UInt8(0)] * 256
+    for i in range(len(sequential_u8)):
+        sequential_u8[i] = UInt8(i)
+    check_bytes_u8(
+        "byte_range/u8",
+        sequential_u8,
+        len(sequential_u8),
+        "dc924469b334aed2a19fac7252e9961aea41f8d91996366029dbe0884229bf36",
+    )
     var zeros512 = [0] * 512
     check_bytes(
         "zeros/512",
         zeros512,
         len(zeros512),
+        "d5c44f659751a819616c58c9efe38e80f2b84cf621036da99c019bbe4f1fb647",
+    )
+    var zeros512_u8 = [UInt8(0)] * 512
+    check_bytes_u8(
+        "zeros/512/u8",
+        zeros512_u8,
+        len(zeros512_u8),
         "d5c44f659751a819616c58c9efe38e80f2b84cf621036da99c019bbe4f1fb647",
     )
 
@@ -72,6 +97,10 @@ fn run_incremental_vectors() raises:
             data[i] = i % 256
         var label = "incremental/" + String(length)
         check_bytes(label, data, length, expected[idx])
+        var data_u8 = [UInt8(0)] * length
+        for j in range(length):
+            data_u8[j] = UInt8(data[j] & 0xFF)
+        check_bytes_u8(label + "/u8", data_u8, length, expected[idx])
 
 
 fn splitmix64_step(state: UInt64) -> UInt64:
@@ -108,6 +137,10 @@ fn run_fuzz_vectors() raises:
             buffer[i] = Int(splitmix64_scramble(state) & UInt64(0xFF))
         var label = "fuzz/" + String(idx)
         check_bytes(label, buffer, Int(length), expected_hex)
+        var buffer_u8 = [UInt8(0)] * length
+        for i in range(length):
+            buffer_u8[i] = UInt8(buffer[i] & 0xFF)
+        check_bytes_u8(label + "/u8", buffer_u8, Int(length), expected_hex)
 
 
 fn main() raises:
