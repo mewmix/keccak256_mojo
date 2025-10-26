@@ -7,3 +7,6 @@
 benchmarks/rust/target/
 benchmarks/c/test_keccak256
 benchmarks/c/test_keccak256.exe
+.bench-build/
+benchmarks/c/bench_keccak256
+benchmarks/c/bench_keccak256.exe

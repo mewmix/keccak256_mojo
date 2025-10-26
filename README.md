@@ -21,6 +21,19 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
    mojo --version
    ```
 
+### Native toolchains for baselines
+
+The combined benchmark expects a C compiler and a Rust toolchain alongside Mojo:
+
+* **C compiler:** Install [clang](https://clang.llvm.org/get_started.html) or GCC. On
+  Debian/Ubuntu you can use `sudo apt-get install build-essential`; on macOS run
+  `xcode-select --install` to get the command line tools.
+* **Rust toolchain:** Install via [rustup](https://rustup.rs/) if `cargo` is not already
+  available:
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  ```
+
 ## Development
 
 * Run the full test suite (known, incremental, and fuzz vectors):
@@ -55,10 +68,11 @@ ignored binaries so they do not end up in commits.
 
 ## Benchmarks
 
-Microbenchmarks comparing this implementation with [`eth-hash`](https://github.com/ethereum/eth-hash)
-and [`pycryptodome`](https://pycryptodome.readthedocs.io/en/latest/) are available under
-`benchmarks/`. The default task prints a single table containing both Python baselines and the
-Mojo JIT/compiled timings (the Mojo programs handle their own timing internally).
+Microbenchmarks comparing this implementation with [`eth-hash`](https://github.com/ethereum/eth-hash),
+[`pycryptodome`](https://pycryptodome.readthedocs.io/en/latest/),
+the C tiny_sha3 port, and a Rust `tiny-keccak` baseline are available under
+`benchmarks/`. Every baseline is timed with the same message schedule, warm-up, and
+iteration counts to keep the comparison fair.
 
 ```bash
 # Activate the Pixi environment first
@@ -74,6 +88,21 @@ pixi run bench:python-json
 # Mojo-only entries
 pixi run bench:mojo-jit
 pixi run bench:mojo-compiled
+
+# Native-only baselines
+python benchmarks/run_full_benchmarks.py --skip-eth-hash --skip-pycryptodome --skip-mojo-jit --skip-mojo-compiled
+python benchmarks/run_full_benchmarks.py --skip-eth-hash --skip-pycryptodome --skip-mojo-jit --skip-mojo-compiled --json
+```
+
+To exercise the native benchmark drivers directly:
+
+```bash
+# C baseline (writes results to .bench-build/ by default)
+cc -std=c11 -O3 benchmarks/c/keccak256.c benchmarks/c/bench_keccak256.c -o .bench-build/c_keccak_bench
+.bench-build/c_keccak_bench --json
+
+# Rust baseline
+(cd benchmarks/rust && cargo run --release --bin bench -- --json)
 ```
 
 Pass `--json` directly to `benchmarks/mojo_benchmark.mojo` if you prefer machine-readable Mojo

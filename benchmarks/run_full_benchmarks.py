@@ -57,13 +57,18 @@ def _load_json(output: str) -> Result | List[Result]:
         raise SystemExit(f"Failed to parse JSON output: {output}") from exc
 
 
+def _ensure_tool(executable: str, message: str) -> str:
+    tool = shutil.which(executable)
+    if tool is None:
+        raise SystemExit(message)
+    return tool
+
+
 def _ensure_mojo() -> str:
-    mojo = shutil.which("mojo")
-    if mojo is None:
-        raise SystemExit(
-            "Unable to locate the `mojo` CLI. Activate your Pixi environment or install Mojo."
-        )
-    return mojo
+    return _ensure_tool(
+        "mojo",
+        "Unable to locate the `mojo` CLI. Activate your Pixi environment or install Mojo.",
+    )
 
 
 def _collect_python_results(root: Path, args: argparse.Namespace) -> List[Result]:
@@ -129,6 +134,67 @@ def _collect_mojo_compiled(
     return data
 
 
+def _collect_c_baseline(root: Path, args: argparse.Namespace) -> Result:
+    compiler = _ensure_tool(
+        "cc",
+        "Unable to locate a C compiler (`cc`). Install one (e.g. clang or gcc) before running the C baseline.",
+    )
+    build_dir = root / args.build_dir
+    build_dir.mkdir(parents=True, exist_ok=True)
+    binary = build_dir / args.c_binary_name
+    sources = [
+        root / "benchmarks" / "c" / "keccak256.c",
+        root / "benchmarks" / "c" / "bench_keccak256.c",
+    ]
+    build_cmd = [
+        compiler,
+        "-O3",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        *(str(src) for src in sources),
+        "-o",
+        str(binary),
+    ]
+    _run_checked(build_cmd, cwd=root)
+    run_cmd = [
+        str(binary),
+        "--label",
+        args.c_label,
+        "--json",
+    ]
+    output = _run_checked(run_cmd, cwd=root)
+    data = _load_json(output)
+    if isinstance(data, list):
+        raise SystemExit("Unexpected list output from C baseline benchmark.")
+    return data
+
+
+def _collect_rust_baseline(root: Path, args: argparse.Namespace) -> Result:
+    _ensure_tool(
+        "cargo",
+        "Unable to locate `cargo`. Install Rust (https://rustup.rs/) before running the Rust baseline.",
+    )
+    cmd = [
+        "cargo",
+        "run",
+        "--quiet",
+        "--release",
+        "--bin",
+        "bench",
+        "--",
+        "--label",
+        args.rust_label,
+        "--json",
+    ]
+    output = _run_checked(cmd, cwd=root / "benchmarks" / "rust")
+    data = _load_json(output)
+    if isinstance(data, list):
+        raise SystemExit("Unexpected list output from Rust baseline benchmark.")
+    return data
+
+
 def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -152,6 +218,16 @@ def main(argv: List[str] | None = None) -> int:
         help="Skip the Mojo compiled benchmark.",
     )
     parser.add_argument(
+        "--skip-c",
+        action="store_true",
+        help="Skip the C baseline benchmark.",
+    )
+    parser.add_argument(
+        "--skip-rust",
+        action="store_true",
+        help="Skip the Rust baseline benchmark.",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Emit combined results as JSON.",
@@ -167,6 +243,11 @@ def main(argv: List[str] | None = None) -> int:
         help="Filename for the compiled Mojo benchmark binary.",
     )
     parser.add_argument(
+        "--c-binary-name",
+        default="c_keccak_bench",
+        help="Filename for the compiled C benchmark binary.",
+    )
+    parser.add_argument(
         "--mojo-jit-label",
         default="mojo (jit)",
         help="Label to display for the Mojo JIT result.",
@@ -176,6 +257,16 @@ def main(argv: List[str] | None = None) -> int:
         default="mojo (compiled)",
         help="Label to display for the Mojo compiled result.",
     )
+    parser.add_argument(
+        "--c-label",
+        default="c (tiny-sha3)",
+        help="Label to display for the C baseline.",
+    )
+    parser.add_argument(
+        "--rust-label",
+        default="rust (tiny-keccak)",
+        help="Label to display for the Rust baseline.",
+    )
     args = parser.parse_args(argv)
 
     root = Path(__file__).resolve().parents[1]
@@ -183,6 +274,12 @@ def main(argv: List[str] | None = None) -> int:
 
     if not (args.skip_eth_hash and args.skip_pycryptodome):
         results.extend(_collect_python_results(root, args))
+
+    if not args.skip_c:
+        results.append(_collect_c_baseline(root, args))
+
+    if not args.skip_rust:
+        results.append(_collect_rust_baseline(root, args))
 
     if not args.skip_mojo_jit or not args.skip_mojo_compiled:
         mojo = _ensure_mojo()
