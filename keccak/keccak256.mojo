@@ -55,7 +55,7 @@ fn load_lane_ptr(ptr: UnsafePointer[UInt8]) -> UInt64:
     v |= UInt64(ptr[7]) << 56
     return v
 
-fn keccak_f1600(mut s: List[UInt64]) -> None:
+fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
 
     @parameter
     if USE_UNROLLED_THETA_CHI:
@@ -242,7 +242,7 @@ fn keccak_f1600(mut s: List[UInt64]) -> None:
 
 
 fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
-    var state = [UInt64(0)] * 25
+    var state = InlineArray[UInt64, 25](fill=0)
     var processed = 0
     var stub = [UInt8(0)] * 1
     var cursor: UnsafePointer[UInt8]
