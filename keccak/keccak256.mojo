@@ -1,6 +1,5 @@
 """Pure Mojo implementation of Keccak-256 using dynamic lists."""
-
-alias MASK_64 = UInt64(0xFFFFFFFFFFFFFFFF)
+from .local_consts import MASK_64
 
 fn to_hex32(d: List[Int]) -> String:
     var lut = "0123456789abcdef"

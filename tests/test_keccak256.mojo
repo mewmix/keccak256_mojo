@@ -1,18 +1,7 @@
-from keccak.keccak256 import keccak256_bytes, keccak256_string
+from keccak.keccak256 import keccak256_bytes, keccak256_string, to_hex32
 from tests._incremental_data import incremental_lengths, incremental_expected
 from tests._fuzz_data import fuzz_lengths, fuzz_expected
-
-alias MASK_64 = UInt64(0xFFFFFFFFFFFFFFFF)
-
-
-fn to_hex32(data: List[Int]) -> String:
-    var lut = "0123456789abcdef"
-    var result = ""
-    for value in data:
-        var byte_val = value & 0xFF
-        result += lut[(byte_val >> 4) & 0xF]
-        result += lut[byte_val & 0xF]
-    return result
+from keccak.local_consts import MASK_64
 
 
 fn assert_hex(label: String, got: String, expected: String) raises:
