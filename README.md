@@ -11,6 +11,7 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
    ```
 2. Create or activate the environment:
    ```bash
+   git clone https://github.com/mewmix/keccak256_mojo/
    cd keccak256_mojo
    pixi install
    pixi shell
