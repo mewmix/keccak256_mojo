@@ -1,4 +1,4 @@
-from keccak.keccak256 import keccak256_bytes, keccak256_string, to_hex32
+from keccak.keccak256 import keccak256_bytes, keccak256_hex_string, keccak256_string
 from tests._incremental_data import incremental_lengths, incremental_expected
 from tests._fuzz_data import fuzz_lengths, fuzz_expected
 from keccak.local_consts import MASK_64
@@ -10,15 +10,25 @@ fn assert_hex(label: String, got: String, expected: String) raises:
             "[FAIL] " + label + ": expected " + expected + ", got " + got
         )
 
+fn digest_to_hex(digest: List[Int]) -> String:
+    var lut = "0123456789abcdef"
+    var out = ""
+    for v in digest:
+        var b = v & 0xFF
+        out += lut[(b >> 4) & 0xF]
+        out += lut[b & 0xF]
+    return out
+
 
 fn check_string(label: String, input: String, expected_hex: String) raises:
     var digest = keccak256_string(input)
-    assert_hex(label, to_hex32(digest), expected_hex)
+    assert_hex(label + "/bytes", digest_to_hex(digest), expected_hex)
+    assert_hex(label + "/hex", keccak256_hex_string(input), expected_hex)
 
 
 fn check_bytes(label: String, data: List[Int], length: Int, expected_hex: String) raises:
     var digest = keccak256_bytes(data, length)
-    assert_hex(label, to_hex32(digest), expected_hex)
+    assert_hex(label, digest_to_hex(digest), expected_hex)
 
 
 fn run_known_vectors() raises:
