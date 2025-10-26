@@ -1,4 +1,4 @@
-from keccak.keccak256 import keccak256_bytes
+from keccak.keccak256 import keccak256_bytes_from_u8
 import time
 from sys import argv
 
@@ -14,11 +14,11 @@ fn message_length(index: Int) -> Int:
     return BASE_LENGTH + ((index * LENGTH_STRIDE) % span)
 
 
-fn generate_message(index: Int) -> List[Int]:
+fn generate_message(index: Int) -> List[UInt8]:
     var length = message_length(index)
-    var data = [0] * length
+    var data = [UInt8(0)] * length
     for offset in range(length):
-        data[offset] = (index + offset) % 256
+        data[offset] = UInt8((index + offset) % 256)
     return data.copy()
 
 
@@ -26,7 +26,7 @@ fn warm_up(rounds: Int = 3):
     for _ in range(rounds):
         for idx in range(NUM_MESSAGES):
             var message = generate_message(idx)
-            var digest = keccak256_bytes(message, len(message))
+            var digest = keccak256_bytes_from_u8(message, len(message))
             _ = digest[0]  # warm-up only
     return
 
@@ -47,7 +47,7 @@ fn run_benchmark() -> BenchmarkResult:
     for _ in range(ROUNDS):
         for idx in range(NUM_MESSAGES):
             var message = generate_message(idx)
-            var digest = keccak256_bytes(message, len(message))
+            var digest = keccak256_bytes_from_u8(message, len(message))
             checksum ^= digest[0]
     var elapsed = time.perf_counter() - start
     return BenchmarkResult(seconds=elapsed, checksum=checksum)
