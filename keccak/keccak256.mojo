@@ -28,6 +28,8 @@ alias RHO = InlineArray[InlineArray[Int, 5], 5](
     InlineArray[Int, 5](27, 20, 39, 8, 14),
 )
 
+
+
 fn to_hex32(d: List[Int]) -> String:
     var lut = "0123456789abcdef"
     var out = ""
@@ -201,7 +203,7 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
     else:
         var C = [UInt64(0)] * 5
         var D = [UInt64(0)] * 5
-        var B = [UInt64(0)] * 25
+        var B = InlineArray[UInt64, 25](fill=0)
 
         for round in range(ROUNDS):
             for x in range(5):
