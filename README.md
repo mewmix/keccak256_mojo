@@ -1,8 +1,7 @@
 # Keccak-256 in Mojo
 [![CI](https://github.com/mewmix/keccak256_mojo/actions/workflows/blank.yml/badge.svg?branch=main)](https://github.com/mewmix/keccak256_mojo/actions/workflows/blank.yml)
 
-A pure Mojo implementation of the Keccak-256 hash along with a self-contained
-test harness and reproducible test vectors.
+A pure Mojo implementation of the Keccak-256 hash for educational purposes.
 
 ## Installation
 
@@ -38,29 +37,18 @@ test harness and reproducible test vectors.
 
 ## Usage
  
-Within a Mojo module or script:
+Example [main.mojo](https://github.com/mewmix/keccak256_mojo/blob/main/main.mojo):
 
 ```mojo
-from keccak.keccak256 import keccak256_bytes, keccak256_string
+from keccak.keccak256 import keccak256_string
 
-fn to_hex32(data: List[Int]) -> String:
-    var lut = "0123456789abcdef"
-    var out = ""
-    for v in data:
-        var b = v & 0xFF
-        out += lut[(b >> 4) & 0xF]
-        out += lut[b & 0xF]
-    return out
+
+alias STR = "abc"
 
 def main():
-    # String input
-    var d1 = keccak256_string("abc")
-    print("keccak256('abc') =", to_hex32(d1))
+    var d = keccak256_string(STR)
+    print(to_hex32(d))
 
-    # Raw byte input
-    var bytes_input: List[Int] = [0, 1, 2]
-    var d2 = keccak256_bytes(bytes_input, len(bytes_input))
-    print("keccak256([00 01 02]) =", to_hex32(d2))
 
 
 

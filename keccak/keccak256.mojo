@@ -2,6 +2,14 @@
 
 alias MASK_64 = UInt64(0xFFFFFFFFFFFFFFFF)
 
+fn to_hex32(d: List[Int]) -> String:
+    var lut = "0123456789abcdef"
+    var out = ""
+    for v in d:
+        var b = v & 0xFF
+        out += lut[(b >> 4) & 0xF]
+        out += lut[b & 0xF]
+    return out
 
 fn rotl64(x: UInt64, n: Int) -> UInt64:
     var k = n % 64
