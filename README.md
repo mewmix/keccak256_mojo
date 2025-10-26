@@ -40,18 +40,11 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
 Example [main.mojo](https://github.com/mewmix/keccak256_mojo/blob/main/main.mojo):
 
 ```mojo
-from keccak.keccak256 import keccak256_string
-
-
-alias STR = "abc"
+from keccak.keccak256 import keccak256_string, to_hex32
 
 def main():
-    var d = keccak256_string(STR)
+    var d = keccak256_string("abc")
     print(to_hex32(d))
-
-
-
-
 ```
 ## Run within Pixi Shell 
 ```bash
