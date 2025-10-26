@@ -100,6 +100,7 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
         var Aso = s[23]
         var Asu = s[24]
 
+        @parameter
         for round in range(ROUNDS):
             var C0 = Aba ^ Aga ^ Aka ^ Ama ^ Asa
             var C1 = Abe ^ Age ^ Ake ^ Ame ^ Ase
