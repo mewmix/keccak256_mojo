@@ -1,4 +1,8 @@
 alias RATE = 136
+alias LANES = 17  # RATE / 8
+alias ROUNDS = 24
+alias USE_UINT8_CORE = False
+alias USE_POINTER_ABSORB = False
 
 fn round_constants() -> List[UInt64]:
     return [
@@ -41,14 +45,25 @@ fn rotl64(x: UInt64, n: Int) -> UInt64:
     var shift = UInt64(k)
     return (x << shift) | (x >> UInt64(64 - k))
 
+fn load_lane_ptr(ptr: UnsafePointer[UInt8]) -> UInt64:
+    var v = UInt64(ptr[0])
+    v |= UInt64(ptr[1]) << 8
+    v |= UInt64(ptr[2]) << 16
+    v |= UInt64(ptr[3]) << 24
+    v |= UInt64(ptr[4]) << 32
+    v |= UInt64(ptr[5]) << 40
+    v |= UInt64(ptr[6]) << 48
+    v |= UInt64(ptr[7]) << 56
+    return v
+
 fn keccak_f1600(mut s: List[UInt64]) -> None:
-    var RC = round_constants()
-    var RHO = rho_offsets()
     var C = [UInt64(0)] * 5
     var D = [UInt64(0)] * 5
     var B = [UInt64(0)] * 25
+    var RC = round_constants()
+    var RHO = rho_offsets()
 
-    for round in range(24):
+    for round in range(ROUNDS):
         for x in range(5):
             C[x] = s[x] ^ s[x + 5] ^ s[x + 10] ^ s[x + 15] ^ s[x + 20]
         for x in range(5):
@@ -80,28 +95,99 @@ fn keccak256_bytes(data: List[Int], length: Int) -> List[Int]:
     var state = [UInt64(0)] * 25
     var offset = 0
 
-    while offset + RATE <= length:
-        for i in range(RATE):
-            var lane = i // 8
-            var shift = (i % 8) * 8
-            var byte_val = UInt64(data[offset + i] & 0xFF)
-            state[lane] = state[lane] ^ (byte_val << UInt64(shift))
+    @parameter
+    if USE_UINT8_CORE:
+        var bytes = [UInt8(0)] * length
+        for i in range(length):
+            bytes[i] = UInt8(data[i] & 0xFF)
+
+        while offset + RATE <= length:
+            @parameter
+            if USE_POINTER_ABSORB:
+                var lane_ptr = UnsafePointer(to=bytes[offset])
+                for lane in range(LANES):
+                    state[lane] = state[lane] ^ load_lane_ptr(lane_ptr)
+                    lane_ptr = lane_ptr.offset(8)
+            else:
+                var base = offset
+                for lane in range(LANES):
+                    var v = UInt64(bytes[base + 0])
+                    v |= UInt64(bytes[base + 1]) << 8
+                    v |= UInt64(bytes[base + 2]) << 16
+                    v |= UInt64(bytes[base + 3]) << 24
+                    v |= UInt64(bytes[base + 4]) << 32
+                    v |= UInt64(bytes[base + 5]) << 40
+                    v |= UInt64(bytes[base + 6]) << 48
+                    v |= UInt64(bytes[base + 7]) << 56
+                    state[lane] = state[lane] ^ v
+                    base += 8
+            keccak_f1600(state)
+            offset += RATE
+
+        var rem = length - offset
+        var block = [UInt8(0)] * RATE
+        for i in range(rem):
+            block[i] = bytes[offset + i]
+        block[rem] = UInt8(0x01)
+        block[RATE - 1] = block[RATE - 1] ^ UInt8(0x80)
+
+        @parameter
+        if USE_POINTER_ABSORB:
+            var lane_ptr = UnsafePointer(to=block[0])
+            for lane in range(LANES):
+                state[lane] = state[lane] ^ load_lane_ptr(lane_ptr)
+                lane_ptr = lane_ptr.offset(8)
+        else:
+            var base = 0
+            for lane in range(LANES):
+                var v = UInt64(block[base + 0])
+                v |= UInt64(block[base + 1]) << 8
+                v |= UInt64(block[base + 2]) << 16
+                v |= UInt64(block[base + 3]) << 24
+                v |= UInt64(block[base + 4]) << 32
+                v |= UInt64(block[base + 5]) << 40
+                v |= UInt64(block[base + 6]) << 48
+                v |= UInt64(block[base + 7]) << 56
+                state[lane] = state[lane] ^ v
+                base += 8
         keccak_f1600(state)
-        offset += RATE
+    else:
+        while offset + RATE <= length:
+            for lane in range(LANES):
+                var base = offset + lane * 8
+                var v = UInt64(0)
+                v |= UInt64(data[base + 0] & 0xFF) << 0
+                v |= UInt64(data[base + 1] & 0xFF) << 8
+                v |= UInt64(data[base + 2] & 0xFF) << 16
+                v |= UInt64(data[base + 3] & 0xFF) << 24
+                v |= UInt64(data[base + 4] & 0xFF) << 32
+                v |= UInt64(data[base + 5] & 0xFF) << 40
+                v |= UInt64(data[base + 6] & 0xFF) << 48
+                v |= UInt64(data[base + 7] & 0xFF) << 56
+                state[lane] = state[lane] ^ v
+            keccak_f1600(state)
+            offset += RATE
 
-    var rem = length - offset
-    var block = [0] * RATE
-    for i in range(rem):
-        block[i] = data[offset + i] & 0xFF
-    block[rem] = 0x01
-    block[RATE - 1] ^= 0x80
+        var rem = length - offset
+        var block = [0] * RATE
+        for i in range(rem):
+            block[i] = data[offset + i] & 0xFF
+        block[rem] = 0x01
+        block[RATE - 1] ^= 0x80
 
-    for i in range(RATE):
-        var lane = i // 8
-        var shift = (i % 8) * 8
-        var block_byte = UInt64(block[i])
-        state[lane] = state[lane] ^ (block_byte << UInt64(shift))
-    keccak_f1600(state)
+        for lane in range(LANES):
+            var base = lane * 8
+            var v = UInt64(0)
+            v |= UInt64(block[base + 0]) << 0
+            v |= UInt64(block[base + 1]) << 8
+            v |= UInt64(block[base + 2]) << 16
+            v |= UInt64(block[base + 3]) << 24
+            v |= UInt64(block[base + 4]) << 32
+            v |= UInt64(block[base + 5]) << 40
+            v |= UInt64(block[base + 6]) << 48
+            v |= UInt64(block[base + 7]) << 56
+            state[lane] = state[lane] ^ v
+        keccak_f1600(state)
 
     var out = [0] * 32
     for i in range(32):
