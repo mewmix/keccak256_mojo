@@ -49,56 +49,42 @@ fn rotl64(x: UInt64, n: Int) -> UInt64:
 
 
 @always_inline
-fn xor_state_block(state_ptr: UnsafePointer[UInt64], lanes: UnsafePointer[UInt64]) -> None:
-    state_ptr[] = state_ptr[] ^ lanes[]
-    state_ptr.offset(1)[] = state_ptr.offset(1)[] ^ lanes.offset(1)[]
-    state_ptr.offset(2)[] = state_ptr.offset(2)[] ^ lanes.offset(2)[]
-    state_ptr.offset(3)[] = state_ptr.offset(3)[] ^ lanes.offset(3)[]
-    state_ptr.offset(4)[] = state_ptr.offset(4)[] ^ lanes.offset(4)[]
-    state_ptr.offset(5)[] = state_ptr.offset(5)[] ^ lanes.offset(5)[]
-    state_ptr.offset(6)[] = state_ptr.offset(6)[] ^ lanes.offset(6)[]
-    state_ptr.offset(7)[] = state_ptr.offset(7)[] ^ lanes.offset(7)[]
-    state_ptr.offset(8)[] = state_ptr.offset(8)[] ^ lanes.offset(8)[]
-    state_ptr.offset(9)[] = state_ptr.offset(9)[] ^ lanes.offset(9)[]
-    state_ptr.offset(10)[] = state_ptr.offset(10)[] ^ lanes.offset(10)[]
-    state_ptr.offset(11)[] = state_ptr.offset(11)[] ^ lanes.offset(11)[]
-    state_ptr.offset(12)[] = state_ptr.offset(12)[] ^ lanes.offset(12)[]
-    state_ptr.offset(13)[] = state_ptr.offset(13)[] ^ lanes.offset(13)[]
-    state_ptr.offset(14)[] = state_ptr.offset(14)[] ^ lanes.offset(14)[]
-    state_ptr.offset(15)[] = state_ptr.offset(15)[] ^ lanes.offset(15)[]
-    state_ptr.offset(16)[] = state_ptr.offset(16)[] ^ lanes.offset(16)[]
+fn xor_state_block(lane_ptrs: InlineArray[UnsafePointer[UInt64], LANES], lanes: UnsafePointer[UInt64]) -> None:
+    @parameter
+    for idx in range(LANES):
+        lane_ptrs[idx][] = lane_ptrs[idx][] ^ lanes.offset(idx)[]
 
 
 
-fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
+fn keccak_f1600(state_ptr: UnsafePointer[UInt64]) -> None:
 
     @parameter
     if USE_UNROLLED_THETA_CHI:
-        var Aba = s[0]
-        var Abe = s[1]
-        var Abi = s[2]
-        var Abo = s[3]
-        var Abu = s[4]
-        var Aga = s[5]
-        var Age = s[6]
-        var Agi = s[7]
-        var Ago = s[8]
-        var Agu = s[9]
-        var Aka = s[10]
-        var Ake = s[11]
-        var Aki = s[12]
-        var Ako = s[13]
-        var Aku = s[14]
-        var Ama = s[15]
-        var Ame = s[16]
-        var Ami = s[17]
-        var Amo = s[18]
-        var Amu = s[19]
-        var Asa = s[20]
-        var Ase = s[21]
-        var Asi = s[22]
-        var Aso = s[23]
-        var Asu = s[24]
+        var Aba = state_ptr[]
+        var Abe = state_ptr.offset(1)[]
+        var Abi = state_ptr.offset(2)[]
+        var Abo = state_ptr.offset(3)[]
+        var Abu = state_ptr.offset(4)[]
+        var Aga = state_ptr.offset(5)[]
+        var Age = state_ptr.offset(6)[]
+        var Agi = state_ptr.offset(7)[]
+        var Ago = state_ptr.offset(8)[]
+        var Agu = state_ptr.offset(9)[]
+        var Aka = state_ptr.offset(10)[]
+        var Ake = state_ptr.offset(11)[]
+        var Aki = state_ptr.offset(12)[]
+        var Ako = state_ptr.offset(13)[]
+        var Aku = state_ptr.offset(14)[]
+        var Ama = state_ptr.offset(15)[]
+        var Ame = state_ptr.offset(16)[]
+        var Ami = state_ptr.offset(17)[]
+        var Amo = state_ptr.offset(18)[]
+        var Amu = state_ptr.offset(19)[]
+        var Asa = state_ptr.offset(20)[]
+        var Ase = state_ptr.offset(21)[]
+        var Asi = state_ptr.offset(22)[]
+        var Aso = state_ptr.offset(23)[]
+        var Asu = state_ptr.offset(24)[]
 
         @parameter
         for round in range(ROUNDS):
@@ -198,31 +184,31 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
 
             Aba = Aba ^ RC[round]
 
-        s[0] = Aba
-        s[1] = Abe
-        s[2] = Abi
-        s[3] = Abo
-        s[4] = Abu
-        s[5] = Aga
-        s[6] = Age
-        s[7] = Agi
-        s[8] = Ago
-        s[9] = Agu
-        s[10] = Aka
-        s[11] = Ake
-        s[12] = Aki
-        s[13] = Ako
-        s[14] = Aku
-        s[15] = Ama
-        s[16] = Ame
-        s[17] = Ami
-        s[18] = Amo
-        s[19] = Amu
-        s[20] = Asa
-        s[21] = Ase
-        s[22] = Asi
-        s[23] = Aso
-        s[24] = Asu
+        state_ptr[] = Aba
+        state_ptr.offset(1)[] = Abe
+        state_ptr.offset(2)[] = Abi
+        state_ptr.offset(3)[] = Abo
+        state_ptr.offset(4)[] = Abu
+        state_ptr.offset(5)[] = Aga
+        state_ptr.offset(6)[] = Age
+        state_ptr.offset(7)[] = Agi
+        state_ptr.offset(8)[] = Ago
+        state_ptr.offset(9)[] = Agu
+        state_ptr.offset(10)[] = Aka
+        state_ptr.offset(11)[] = Ake
+        state_ptr.offset(12)[] = Aki
+        state_ptr.offset(13)[] = Ako
+        state_ptr.offset(14)[] = Aku
+        state_ptr.offset(15)[] = Ama
+        state_ptr.offset(16)[] = Ame
+        state_ptr.offset(17)[] = Ami
+        state_ptr.offset(18)[] = Amo
+        state_ptr.offset(19)[] = Amu
+        state_ptr.offset(20)[] = Asa
+        state_ptr.offset(21)[] = Ase
+        state_ptr.offset(22)[] = Asi
+        state_ptr.offset(23)[] = Aso
+        state_ptr.offset(24)[] = Asu
     else:
         var C = [UInt64(0)] * 5
         var D = [UInt64(0)] * 5
@@ -230,17 +216,18 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
 
         for round in range(ROUNDS):
             for x in range(5):
-                C[x] = s[x] ^ s[x + 5] ^ s[x + 10] ^ s[x + 15] ^ s[x + 20]
+                C[x] = state_ptr.offset(x)[] ^ state_ptr.offset(x + 5)[] ^ state_ptr.offset(x + 10)[] ^ state_ptr.offset(x + 15)[] ^ state_ptr.offset(x + 20)[]
             for x in range(5):
                 D[x] = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1)
             for i in range(25):
-                s[i] = s[i] ^ D[i % 5]
+                var lane_idx = i % 5
+                state_ptr.offset(i)[] = state_ptr.offset(i)[] ^ D[lane_idx]
 
             for x in range(5):
                 for y in range(5):
                     var idx = x + 5 * y
                     var new_idx = y + 5 * ((2 * x + 3 * y) % 5)
-                    B[new_idx] = rotl64(s[idx], RHO[x][y])
+                    B[new_idx] = rotl64(state_ptr.offset(idx)[], RHO[x][y])
 
             for y in range(0, 25, 5):
                 var b0 = B[y + 0]
@@ -248,18 +235,38 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
                 var b2 = B[y + 2]
                 var b3 = B[y + 3]
                 var b4 = B[y + 4]
-                s[y + 0] = b0 ^ ((~b1) & b2)
-                s[y + 1] = b1 ^ ((~b2) & b3)
-                s[y + 2] = b2 ^ ((~b3) & b4)
-                s[y + 3] = b3 ^ ((~b4) & b0)
-                s[y + 4] = b4 ^ ((~b0) & b1)
+                state_ptr.offset(y + 0)[] = b0 ^ ((~b1) & b2)
+                state_ptr.offset(y + 1)[] = b1 ^ ((~b2) & b3)
+                state_ptr.offset(y + 2)[] = b2 ^ ((~b3) & b4)
+                state_ptr.offset(y + 3)[] = b3 ^ ((~b4) & b0)
+                state_ptr.offset(y + 4)[] = b4 ^ ((~b0) & b1)
 
-            s[0] = s[0] ^ RC[round]
+            state_ptr[] = state_ptr[] ^ RC[round]
 
 
 fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
     var state = InlineArray[UInt64, 25](fill=0)
     var state_ptr = UnsafePointer(to=state[0])
+    var state_bytes = state_ptr.bitcast[UInt8]()
+    var lane_ptrs = InlineArray[UnsafePointer[UInt64], LANES](
+        state_ptr,
+        state_ptr.offset(1),
+        state_ptr.offset(2),
+        state_ptr.offset(3),
+        state_ptr.offset(4),
+        state_ptr.offset(5),
+        state_ptr.offset(6),
+        state_ptr.offset(7),
+        state_ptr.offset(8),
+        state_ptr.offset(9),
+        state_ptr.offset(10),
+        state_ptr.offset(11),
+        state_ptr.offset(12),
+        state_ptr.offset(13),
+        state_ptr.offset(14),
+        state_ptr.offset(15),
+        state_ptr.offset(16),
+    )
     var processed = 0
     var zero_stub = InlineArray[UInt8, 1](fill=UInt8(0))
     var cursor: UnsafePointer[UInt8]
@@ -269,24 +276,20 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
         cursor = UnsafePointer(to=zero_stub[0])
 
     while processed + RATE <= length:
-        xor_state_block(state_ptr, cursor.bitcast[UInt64]())
-        keccak_f1600(state)
+        xor_state_block(lane_ptrs, cursor.bitcast[UInt64]())
+        keccak_f1600(state_ptr)
         cursor = cursor.offset(RATE)
         processed += RATE
 
-    var block = InlineArray[UInt8, RATE](fill=UInt8(0))
     var rem = length - processed
     for i in range(rem):
-        block[i] = (cursor + i)[]
-    block[rem] = UInt8(0x01)
-    block[RATE - 1] = block[RATE - 1] ^ UInt8(0x80)
+        state_bytes.offset(i)[] = state_bytes.offset(i)[] ^ (cursor + i)[]
+    state_bytes.offset(rem)[] = state_bytes.offset(rem)[] ^ UInt8(0x01)
+    state_bytes.offset(RATE - 1)[] = state_bytes.offset(RATE - 1)[] ^ UInt8(0x80)
 
-    xor_state_block(state_ptr, UnsafePointer(to=block[0]).bitcast[UInt64]())
-
-    keccak_f1600(state)
+    keccak_f1600(state_ptr)
 
     var out = [0] * 32
-    var state_bytes = UnsafePointer(to=state[0]).bitcast[UInt8]()
     for i in range(32):
         out[i] = Int(state_bytes.offset(i)[])
     return out.copy()
