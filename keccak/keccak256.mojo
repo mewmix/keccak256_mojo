@@ -49,24 +49,24 @@ fn rotl64(x: UInt64, n: Int) -> UInt64:
 
 
 @always_inline
-fn xor_state_block(mut state: InlineArray[UInt64, 25], lanes: UnsafePointer[UInt64]) -> None:
-    state[0] = state[0] ^ lanes[]
-    state[1] = state[1] ^ lanes.offset(1)[]
-    state[2] = state[2] ^ lanes.offset(2)[]
-    state[3] = state[3] ^ lanes.offset(3)[]
-    state[4] = state[4] ^ lanes.offset(4)[]
-    state[5] = state[5] ^ lanes.offset(5)[]
-    state[6] = state[6] ^ lanes.offset(6)[]
-    state[7] = state[7] ^ lanes.offset(7)[]
-    state[8] = state[8] ^ lanes.offset(8)[]
-    state[9] = state[9] ^ lanes.offset(9)[]
-    state[10] = state[10] ^ lanes.offset(10)[]
-    state[11] = state[11] ^ lanes.offset(11)[]
-    state[12] = state[12] ^ lanes.offset(12)[]
-    state[13] = state[13] ^ lanes.offset(13)[]
-    state[14] = state[14] ^ lanes.offset(14)[]
-    state[15] = state[15] ^ lanes.offset(15)[]
-    state[16] = state[16] ^ lanes.offset(16)[]
+fn xor_state_block(state_ptr: UnsafePointer[UInt64], lanes: UnsafePointer[UInt64]) -> None:
+    state_ptr[] = state_ptr[] ^ lanes[]
+    state_ptr.offset(1)[] = state_ptr.offset(1)[] ^ lanes.offset(1)[]
+    state_ptr.offset(2)[] = state_ptr.offset(2)[] ^ lanes.offset(2)[]
+    state_ptr.offset(3)[] = state_ptr.offset(3)[] ^ lanes.offset(3)[]
+    state_ptr.offset(4)[] = state_ptr.offset(4)[] ^ lanes.offset(4)[]
+    state_ptr.offset(5)[] = state_ptr.offset(5)[] ^ lanes.offset(5)[]
+    state_ptr.offset(6)[] = state_ptr.offset(6)[] ^ lanes.offset(6)[]
+    state_ptr.offset(7)[] = state_ptr.offset(7)[] ^ lanes.offset(7)[]
+    state_ptr.offset(8)[] = state_ptr.offset(8)[] ^ lanes.offset(8)[]
+    state_ptr.offset(9)[] = state_ptr.offset(9)[] ^ lanes.offset(9)[]
+    state_ptr.offset(10)[] = state_ptr.offset(10)[] ^ lanes.offset(10)[]
+    state_ptr.offset(11)[] = state_ptr.offset(11)[] ^ lanes.offset(11)[]
+    state_ptr.offset(12)[] = state_ptr.offset(12)[] ^ lanes.offset(12)[]
+    state_ptr.offset(13)[] = state_ptr.offset(13)[] ^ lanes.offset(13)[]
+    state_ptr.offset(14)[] = state_ptr.offset(14)[] ^ lanes.offset(14)[]
+    state_ptr.offset(15)[] = state_ptr.offset(15)[] ^ lanes.offset(15)[]
+    state_ptr.offset(16)[] = state_ptr.offset(16)[] ^ lanes.offset(16)[]
 
 
 
@@ -258,6 +258,7 @@ fn keccak_f1600(mut s: InlineArray[UInt64, 25]) -> None:
 
 fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
     var state = InlineArray[UInt64, 25](fill=0)
+    var state_ptr = UnsafePointer(to=state[0])
     var processed = 0
     var zero_stub = InlineArray[UInt8, 1](fill=UInt8(0))
     var cursor: UnsafePointer[UInt8]
@@ -267,7 +268,7 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
         cursor = UnsafePointer(to=zero_stub[0])
 
     while processed + RATE <= length:
-        xor_state_block(state, cursor.bitcast[UInt64]())
+        xor_state_block(state_ptr, cursor.bitcast[UInt64]())
         keccak_f1600(state)
         cursor = cursor.offset(RATE)
         processed += RATE
@@ -279,7 +280,7 @@ fn keccak256_raw(ptr: UnsafePointer[UInt8], length: Int) -> List[Int]:
     block[rem] = UInt8(0x01)
     block[RATE - 1] = block[RATE - 1] ^ UInt8(0x80)
 
-    xor_state_block(state, UnsafePointer(to=block[0]).bitcast[UInt64]())
+    xor_state_block(state_ptr, UnsafePointer(to=block[0]).bitcast[UInt64]())
 
     keccak_f1600(state)
 
