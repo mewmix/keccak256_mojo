@@ -23,16 +23,7 @@ A pure Mojo implementation of the Keccak-256 hash for educational purposes.
 
 ### Native toolchains for baselines
 
-The combined benchmark expects a C compiler and a Rust toolchain alongside Mojo:
-
-* **C compiler:** Install [clang](https://clang.llvm.org/get_started.html) or GCC. On
-  Debian/Ubuntu you can use `sudo apt-get install build-essential`; on macOS run
-  `xcode-select --install` to get the command line tools.
-* **Rust toolchain:** Install via [rustup](https://rustup.rs/) if `cargo` is not already
-  available:
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  ```
+`pixi install` automatically provisions the exact versions of all necessary toolchains, including `mojo`, `rust`, `cargo`, `clang` (C compiler), `zig`, and `python`. You do not need to install anything globally!
 
 ## Development
 
@@ -81,6 +72,12 @@ pixi run bench
 # JSON output for automation
 pixi run bench:json
 
+# Run baselines with native CPU optimizations (-mcpu=native / apple-m1)
+pixi run bench:native
+
+# Run the multi-threaded selector collision brute-force workload (Mojo vs Zig)
+pixi run bench:bruteforce
+
 # Python-only baselines
 pixi run bench:python
 pixi run bench:python-json
@@ -89,7 +86,7 @@ pixi run bench:python-json
 pixi run bench:mojo-jit
 pixi run bench:mojo-compiled
 
-# Native-only baselines
+# Native-only generic baselines
 python benchmarks/run_full_benchmarks.py --skip-eth-hash --skip-pycryptodome --skip-mojo-jit --skip-mojo-compiled
 python benchmarks/run_full_benchmarks.py --skip-eth-hash --skip-pycryptodome --skip-mojo-jit --skip-mojo-compiled --json
 ```

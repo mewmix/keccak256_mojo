@@ -25,9 +25,17 @@ cmd = "mojo -I . benchmarks/mojo_benchmark.mojo --label \"mojo (jit)\""
 [tasks."bench:mojo-compiled"]
 cmd = "bash -lc \"set -euo pipefail; mojo build -I . benchmarks/mojo_benchmark.mojo -o .bench-build/mojo_keccak_bench; .bench-build/mojo_keccak_bench --label 'mojo (compiled)'\""
 
+[tasks."bench:bruteforce"]
+cmd = "python benchmarks/run_full_benchmarks.py --bruteforce"
+
+[tasks."bench:native"]
+cmd = "python benchmarks/run_full_benchmarks.py --native"
 [dependencies]
 mojo = ">=0.25.7.0.dev2025101905,<0.26"
 python = ">=3.11,<3.13"
 pycryptodome = "*"
 eth-hash = "*"
 pytest = "*"
+zig = ">=0.16.0,<0.17"
+rust = "*"
+c-compiler = "*"
