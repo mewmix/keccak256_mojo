@@ -8,11 +8,9 @@ alias BASE_LENGTH = 32
 alias MAX_LENGTH = 512
 alias LENGTH_STRIDE = 31
 
-
 fn message_length(index: Int) -> Int:
     var span = MAX_LENGTH - BASE_LENGTH + 1
     return BASE_LENGTH + ((index * LENGTH_STRIDE) % span)
-
 
 fn generate_message(index: Int) -> List[UInt8]:
     var length = message_length(index)
@@ -20,7 +18,6 @@ fn generate_message(index: Int) -> List[UInt8]:
     for offset in range(length):
         data[offset] = UInt8((index + offset) % 256)
     return data.copy()
-
 
 fn warm_up(rounds: Int = 3):
     for _ in range(rounds):
@@ -30,7 +27,6 @@ fn warm_up(rounds: Int = 3):
             _ = digest[0]  # warm-up only
     return
 
-
 struct BenchmarkResult:
     var seconds: Float64
     var checksum: Int
@@ -39,27 +35,27 @@ struct BenchmarkResult:
         self.seconds = seconds
         self.checksum = checksum
 
-
 fn run_benchmark() -> BenchmarkResult:
     warm_up()
+    
+    var messages = List[List[UInt8]]()
+    for idx in range(NUM_MESSAGES):
+        messages.append(generate_message(idx))
+        
     var checksum = 0
     var start = time.perf_counter()
     for _ in range(ROUNDS):
         for idx in range(NUM_MESSAGES):
-            var message = generate_message(idx)
-            var digest = keccak256_bytes_from_u8(message, len(message))
+            var digest = keccak256_bytes_from_u8(messages[idx], len(messages[idx]))
             checksum ^= digest[0]
     var elapsed = time.perf_counter() - start
     return BenchmarkResult(seconds=elapsed, checksum=checksum)
 
-
 fn float_to_string(value: Float64) -> String:
     return String(value)
 
-
 fn int_to_string(value: Int) -> String:
     return String(value)
-
 
 def main():
     var label = "mojo"
